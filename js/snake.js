@@ -3,11 +3,11 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
                        
 
     // on crée la variable canvas en dehors de la méthode init pour qu'elle puisse avoir une portée plus large que celle de la fonction init
-    var canvasWidth= 900;  // La largeur de notre canvas
+    var canvasWidth = 900;  // La largeur de notre canvas
     var canvasHeight = 600; // La hauteur de notre canvas
     var blockSize = 30; // la largeur d'un block qui correspond au block du canvas ou du serpent
     var ctx; // je créer la variable contexte pour pouvoir l'utiliser ensuite
-    var delay = 1000; // exprimé en millisecondes (1 seconde)
+    var delay = 100; // exprimé en millisecondes (1 seconde)
     // var xCoord = 0; // (x) horizontal : de base il est tout à gauche
     // var yCoord = 0; // (y) vertical ; de base il est tout en haut
     var snakee; // cette variable représente le serpent. L'objectif est de pouvoir l'utiliser dans toutes les méthodes (qu'elle ait une portée "globale"?)
@@ -124,17 +124,24 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
         // la variable nextPosition sera la nouvelle position de la tête        
         var nextPosition = this.body[0].slice(); 
                             
-        // // Ici on fait avancer le serpent d'une case juste selon l'axe des X ( fait réference au 6 du Snake) en partant de la tête vers la droite (+1). ex, si on veut changer la position de l'axe des X en partant vers la gauche on va écrire nextPosition[0] -=
-        // nextPosition[0] ++;
-        
+        // Ici on fait avancer le serpent d'une case juste selon l'axe des X ( fait réference au 6 du Snake) en partant de la tête vers la droite (+1). 
+        // exemple, si on veut changer la position de l'axe des X en partant vers la gauche on va écrire nextPosition[0] -= 
+     
         switch(this.direction) {
             case "left":
+            nextPosition[0] -= 1; // Position X - 1 pour le faire déplacer vers la gauche
                 break;
             case "right":
+            nextPosition[0] += 1; // Position X + 1 pour le faire déplacer vers la droite
                 break;
             case "down":
+            nextPosition[1] += 1; // Position Y + 1 pour le faire déplacer vers le bas
                 break;
-                case "up":
+            case "up":
+            nextPosition[1] -= 1; // Position Y - 1 pour le faire déplacer vers le haut
+                break;
+            default: // sinon on utilise throw() fonction qui nous permet de renvoyer un message d'erreur
+                throw("Invalid Direction");
         }
         // unshit() fonction qui marche sur des array, permet de rajouter ce qu'il y a entre parenthese (ici nextPosition) à la premiere place
         // Une fois que je fais unshift nexposition, il y aura maintenant 4 elements. On rajoute [7,4] automatiquement grace à ça
@@ -142,7 +149,64 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
         // J'ai besoin maintenant de supprimer la derniere position du corp du serpent avec pop()
         this.body.pop(); // pop permet de supprimer le dernier element d'un array donc la queue 
 
-    };
-
+        };
+        
+        
+        this.setDirection = function(newDirection) // la fonction va donner la direction
+    {
+        var allowedDirections; // directions autorisées
+        switch(this.direction)
+        {
+        case "left": // Quand tu te deplace sur la gauche et la droite tu ne peux aller que en haut ou en bas
+        case "right":
+            allowedDirections = ["up", "down"]; // ici c'et un array donc l'index 0,1
+            break;
+        case "down": // Quand tu te deplace vers le bas et le haut tu ne peux aller que en gauche ou a droite
+        case "up":
+            allowedDirections = ["left", "right"]; // ici c'et un array donc l'index 0,1
+            break;
+        default: // sinon on utilise throw() fonction qui nous permet de renvoyer un message d'erreur
+            throw("Invalid Direction"); 
+            
+        }
+        if(allowedDirections.indexOf(newDirection) > -1) // si l'index de ma nouvelle direction dans mes allowDirections est supérieur à -1 alors la nouvelle direction est permise
+        // alloweDirections est un array qui a pour index 0 les x et pour index 1 les y
+        //donc si la nouvelle direction n'est pas égale à l'index 0 et 1 alors elle n'est pas permis        
+        // la direction est vraie tant que la tête du serpent ne prend la position de la queue .Si la direction est permise car  .. indexOf(élémentRecherché = L'élément qu'on cherche dans le tableau )
+        // indexOf compare élémentRecherché aux éléments contenus dans le tableau en utilisant une égalité stricte (la même méthode utilisée par l'opérateur ===).
+       
+        {
+            this.direction = newDirection; // La direction actuelle du serpent sera la nouvelle direction
+        }
     }
+} // ici c'est la fermeture du snake !!! LOL :'D
+
+    // on veut que la direction change en fonction de ce que tape l'utilisateur
+    // L'évènement onkeydown se déclenche lorsque qu'une touche du clavier est enfoncée.
+    // on créer une fonction handlekeydown avec un evenemnt (e) en parametre (on peut transmettre chaque evenement)
+    document.onkeydown = function handleKeyDown(event) { // event = evenement Lorque qu'on appui sur la touche
+
+    var key = event.keyCode; // A VERIFIER : la variable key a pour valeur l'evenement d'appuyer sur une touche et donc le code numérique de la touche
+     //Le langage Javascript associe à chaque touche du clavier un code numérique. Ainsi toute série de touches (et donc de lettres) peut être encodée avec des nombres.
+     
+    var newDirection; // choisir la direction EN FONCTION de ce que l'utilisateur a appuyé
+    switch(key)
+    {
+        case 37: // 37 correspond au code de la touche "fleche de gauche"
+        newDirection = "left";
+            break;
+        case 38: // 38 correspond au code de la touche "fleche du haut"
+        newDirection = "up";
+        break;
+        case 39: // 39 correspond au code de la touche "fleche de droite"
+            newDirection = "right";
+            break;
+        case 40: // correspond au code de la touche "fleche du bas"
+        newDirection = "down";
+            break;
+            default: // si le code tappé n'est pas 37/38/39 ou 40, je ne continue pas la fonction, donc je l'arrete avec un return
+            return;
+    }        
+    snakee.setDirection(newDirection);
+}
 }
