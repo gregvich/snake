@@ -1,7 +1,7 @@
 window.onload = function() { // Un gestionnaire d'évènement pour l'évènement load (chargement) de la fenêtre.
                             // Cela permet d'empêcher l'exécution du code avant le chargement complet de tous les éléments de la page.
                        
-
+  
     // on crée la variable canvas en dehors de la méthode init pour qu'elle puisse avoir une portée plus large que celle de la fonction init
     var canvasWidth = 900;  // La largeur de notre canvas
     var canvasHeight = 600; // La hauteur de notre canvas
@@ -12,6 +12,8 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
     // var yCoord = 0; // (y) vertical ; de base il est tout en haut
     var snakee; // cette variable représente le serpent. L'objectif est de pouvoir l'utiliser dans toutes les méthodes (qu'elle ait une portée "globale"?)
     var applee;
+    var widthInBlocks = canvasWidth/blockSize; // A VERIFIER 30 blocks en largeur (en comptant le 0). ici on veut connaitre la largeur à l'echelle de blocks (avant le canevas était représenté uniquement en pixel). Le total de la largeur des blocs contenus dans le canvas
+    var heightInBlocks = canvasHeight/blockSize; // A VERIFIER 20 block en hauteur (en comptant le 0). le total de la hauteur des blocs contenus dans le canvas
 
     init(); // ici on exécute la fonction crée en dessous
         
@@ -30,7 +32,7 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
         canvas.style.border = "1px solid"; // on ajoute un bordure au canvas pour pouvoir mieux la visualiser
         document.body.appendChild(canvas); // ICI on RELIE le Canvas et le html (document) via le body
         ctx = canvas.getContext('2d'); // Je met le contexte en 2d ( il y a 4 possibilités mais ici on choisis 2d) https://developer.mozilla.org/fr/docs/Web/API/HTMLCanvasElement/getContext
-        snakee = new Snake([[6,4],[5,4],[4,4],[3,4]], "right") // Le body [] est le corps complet du serpent qui est représenté par 3 blocks. le 1er crochet représente le canvas et les crochets chaque block
+        snakee = new Snake([[6,4],[5,4],[4,4],[3,4],[2,4],[1,4]], "right"); // Le body [] est le corps complet du serpent qui est représenté par 3 blocks. le 1er crochet représente le canvas et les crochets chaque block
         // right signifie qu'il ira a droite de base 
         applee = new Apple([10,10]); // Son X et son Y ( x 10, y 10 )
         refreshCanvas(); // on appelle la fonction refreshCanvas pour la charger
@@ -43,13 +45,20 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
         
          // xCoord += 2; // valeur horizontal ( direction vers laquelle le serpent va se deplacer)
          // yCoord += 2; // valeur vertical : si on met par exemple le yCoord à 0, le block ne se déplacera que sur le xCoord !!
+         
+         snakee.advance(); // Je veux d'abord faire avancer mon serpent pour voir SI-ENSUITE il y a eu une coolision
+
+         if(snakee.checkCollision())  { // Si il y a eu une collision 
+
+            // GAME OVER !!!!!!
+         } else {
+
 
         // A chaque fois qu'une seconde passe ( 1000 milisecondes) on va le mettre dans une nouvelle position
         // ici on efface toute la largeur et la hauteur du canvas
         // https://developer.mozilla.org/fr/docs/Web/API/CanvasRenderingContext2D/clearRect (ALT + CLICK POUR SUIVRE DIRECT LE LIEN)
         ctx.clearRect(0,0, canvasWidth, canvasHeight);
 
-        snakee.advance();
         // Ici la couleur de mon serpent
         // https://developer.mozilla.org/fr/docs/Tutoriel_canvas/Ajout_de_styles_et_de_couleurs (ALT + CLICK POUR SUIVRE DIRECT LE LIEN)
         //  ctx.fillStyle = "#3465A4"; 
@@ -69,6 +78,7 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
         // https://developer.mozilla.org/fr/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout
         setTimeout(refreshCanvas, delay);
     }
+}
 
     function drawBlock(ctx,position) {
         // le canvas on ne lui parle pas en terme de block (il ne comprend notre définition de block), il comprend que les pixels
@@ -116,7 +126,7 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
                     // Au debut de la boucle i = 0, ensuite i = 1, i= 2 etc .. jusqu'a 3 ( le nombre de nos blocks dans le body du serpent)
                     drawBlock(ctx, this.body[i]); 
 
-            }
+             }
             ctx.restore()  // restore() ---> Restore le plus récent état sauvegardé du canevas.
         };
 
@@ -175,6 +185,7 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
             throw("Invalid Direction"); 
             
         }
+        
         if(allowedDirections.indexOf(newDirection) > -1) // si l'index de ma nouvelle direction dans mes allowDirections est supérieur à -1 alors la nouvelle direction est permise
         // alloweDirections est un array qui a pour index 0 les x et pour index 1 les y
         //donc si la nouvelle direction n'est pas égale à l'index 0 et 1 alors elle n'est pas permis        
@@ -185,16 +196,60 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
             this.direction = newDirection; // La direction actuelle du serpent sera la nouvelle direction
         }
     };
-    
+
+    this.checkCollision = function() { //function qui permet de detecter une colision avec le mur ou avec le serpent lui meme.
+
+        var wallCollision = false; // on créer cette variable pour déterminer le fait que le serpent touche un mur qui est de base FAUX. ça sera faux tant qu'on aura pas toucher de mur
+        var snakeCollision =  false; // Pareil pour le serpent. le serpent de base il touche pas son corps, sinon on ne pourrait pas jouer et on aurait game over tout le temps :'D
+        
+        var head = this.body[0]; //ici on créer une variable pour désigner la tete du serpent. la premiere partie du corps a se prendre une colision sera la tete. 
+        var rest = this.body.slice(1); // ici on créer une variable pour désigner le corps du serpent. on met slice(1) pour couper la tete du serpent et attribuer le reste au corps 
+        // La méthode slice() renvoie un objet tableau, contenant une copie superficielle (shallow copy) d'une portion du tableau d'origine,
+        // la portion est définie par un indice de début et un indice de fin (exclus). Le tableau original ne sera pas modifié.
+        
+        var snakeX = head[0]; // Le head est un array de deux valeurs : le X
+        var snakeY = head[1]; // et le Y
+
+        var minX = 0; // Bordure de gauche definir  le minimmum X ( l'horizontal de nos blocks ) à 0 . minX = mur de gauche
+        var minY = 0;  // Bordure du haut definir  le minimmum Y ( le vertical de nos blocks ) à 0   minY = mur du haut
+        var maxX = widthInBlocks -1; // maxX = Bordure de droite . définir le maximum X  vu que l'on démarre à partir de 0 et qu'il y a 30 blocks a l'horitzontal on fais -1 (= 29) (pour pouvoir prendre en compte le 0)
+        var maxY = heightInBlocks -1; // maxY = Bordure du bas . definir  le maximum Y vu que l'on démarre à partir de 0 et qu'il y a 20 blocks a la vertical on fais -1 (= 19) (pour pouvoir prendre en compte le 0)
+        
+        var isNotBetweenHorizontalWalls = snakeX < minX || snakeX > maxX;// si la tête du serpent n'est pas situé entre les 2 murs horizontaux, c'est qu'il sera en dehors du canvas
+        var isNotBetweenVerticalWalls = snakeY < minY || snakeY > maxY; // si la tête du serpent n'est pas situé entre les 2 murs verticaux, c'est qu'il sera en dehors du canvas
+
+        // Condition : Si je ne suis pas dans les murs horizontaux OU si je ne suis pas dans les murs verticaux
+        // ALors le serpent à touché un mur
+        // on va faire une vérification pour savoir que le serpent ne s'est pas pris un mur
+        if(isNotBetweenHorizontalWalls || isNotBetweenVerticalWalls) {
+            wallCollision = true;
+        }
+
+        // ici on veut vérifier que le serpent n'a pas touché son corps avec sa tête    
+        // rest.lenght = le reste du corps ( tout son corps sauf sa tête)
+
+        for(var i = 0; i < rest.length ; i++) { // A VERIFIER
+            // Je veux vérifier si la tête et le corps ont le meme X et le meme Y ( ça voudra dire qu'ils sont sur la meme case donc GAME OVER)
+            if(snakeX === rest[i][0] && snakeY === rest[i][1]) {
+                snakeCollision = true;
+            }
+
+        }
+        // Il suffira qu'il y ai une seule des deux conditions qui soit vrai pour retourner true
+        return wallCollision || snakeCollision;
+    }; 
+    debugger;
 } // ici c'est la fermeture du snake !!! LOL :'D
 
     function Apple(position){ //ici on va faire comme avec la position du serpent. // Elle a juste besoin d'une position donc position en parametre
     
     this.position = position;
+    
     this.draw = function() { // fonction qui permet de dessiner la pomme
         ctx.save(); // Pour sauvegarder les anciens parametres dans le contexte
         ctx.fillStyle = "#CC0000";
         ctx.beginPath(); // A VERIFIER!!!!!!!!!!!!!!!!!!!!!!!!!!!!  On veut que la form soit ronde, donc pas de Rect 
+        
         var radius = blockSize/2; // le rayon  (var radius) c'est la position du block divisé par 2
         var x = position[0]*blockSize + radius; //position[0] c'est toujours la coordonée de x
         var y = position[1]*blockSize + radius; // position[1] c'est toujours la coordonée de y
@@ -217,7 +272,7 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
      //Le langage Javascript associe à chaque touche du clavier un code numérique. Ainsi toute série de touches (et donc de lettres) peut être encodée avec des nombres.
      
     var newDirection; // choisir la direction EN FONCTION de ce que l'utilisateur a appuyé
-    switch(key)
+    switch(key) // Si key est vérifié, donc si un utilisateur appui sur une touche (event.keyCode)
     {
         case 37: // 37 correspond au code de la touche "fleche de gauche"
         newDirection = "left";
@@ -235,5 +290,5 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
             return;
     }        
     snakee.setDirection(newDirection);
-}
+    }
 }
