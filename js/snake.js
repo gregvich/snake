@@ -11,6 +11,7 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
     // var xCoord = 0; // (x) horizontal : de base il est tout à gauche
     // var yCoord = 0; // (y) vertical ; de base il est tout en haut
     var snakee; // cette variable représente le serpent. L'objectif est de pouvoir l'utiliser dans toutes les méthodes (qu'elle ait une portée "globale"?)
+    var applee;
 
     init(); // ici on exécute la fonction crée en dessous
         
@@ -31,7 +32,9 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
         ctx = canvas.getContext('2d'); // Je met le contexte en 2d ( il y a 4 possibilités mais ici on choisis 2d) https://developer.mozilla.org/fr/docs/Web/API/HTMLCanvasElement/getContext
         snakee = new Snake([[6,4],[5,4],[4,4],[3,4]], "right") // Le body [] est le corps complet du serpent qui est représenté par 3 blocks. le 1er crochet représente le canvas et les crochets chaque block
         // right signifie qu'il ira a droite de base 
+        applee = new Apple([10,10]); // Son X et son Y ( x 10, y 10 )
         refreshCanvas(); // on appelle la fonction refreshCanvas pour la charger
+
    
     }
 
@@ -58,6 +61,9 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
 
 
         snakee.draw(); // Je veux que mon serpent se dessine 
+
+        applee.draw(); // je veux qe la pomme se dessine quand on rafraichit la page
+        
         // setTimeout permet de définir un « minuteur » (timer) qui exécute une fonction ou un code donné après la fin du délai indiqué.
         // Execute moi refreshCanvas à chaque fois qu'un certain délai est passé (ici delay = 1000 milisecondes)
         // https://developer.mozilla.org/fr/docs/Web/API/WindowOrWorkerGlobalScope/setTimeout
@@ -178,8 +184,29 @@ window.onload = function() { // Un gestionnaire d'évènement pour l'évènement
         {
             this.direction = newDirection; // La direction actuelle du serpent sera la nouvelle direction
         }
-    }
+    };
+    
 } // ici c'est la fermeture du snake !!! LOL :'D
+
+    function Apple(position){ //ici on va faire comme avec la position du serpent. // Elle a juste besoin d'une position donc position en parametre
+    
+    this.position = position;
+    this.draw = function() { // fonction qui permet de dessiner la pomme
+        ctx.save(); // Pour sauvegarder les anciens parametres dans le contexte
+        ctx.fillStyle = "#CC0000";
+        ctx.beginPath(); // A VERIFIER!!!!!!!!!!!!!!!!!!!!!!!!!!!!  On veut que la form soit ronde, donc pas de Rect 
+        var radius = blockSize/2; // le rayon  (var radius) c'est la position du block divisé par 2
+        var x = position[0]*blockSize + radius; //position[0] c'est toujours la coordonée de x
+        var y = position[1]*blockSize + radius; // position[1] c'est toujours la coordonée de y
+        // ctx.arc(x, y, rayon, angleDépart, angleFin, sensAntiHoraire);
+        // x = La position en x du centre de l'arc.
+        // y = La position en y du centre de l'arc.
+        ctx.arc(x,y,radius, 0, Math.PI*2, true); // si c'est un cercle : il faut multiplier le diamètre par le nombre pi . ici on dessine le cercle
+        ctx.fill(); // ici on remplit le cerre
+        ctx.restore(); // Pour restorer les anciens parametres dans le contexte
+
+         }
+    }
 
     // on veut que la direction change en fonction de ce que tape l'utilisateur
     // L'évènement onkeydown se déclenche lorsque qu'une touche du clavier est enfoncée.
